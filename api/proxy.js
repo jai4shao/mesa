@@ -1,6 +1,14 @@
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
+  if (req.method === 'OPTIONS') {
+    // CORS 預檢請求回應
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -8,7 +16,6 @@ export default async function handler(req, res) {
   try {
     // 你的 GAS Web App URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxSly_6PEMVdv12ELjPEw3cL20JQV135_G3hyuMVYtBwcpdp1Ka-wiuT72mHgP7hvo0/exec';
-
     const response = await fetch(GAS_URL, {
       method: 'POST',
       headers: {
@@ -19,7 +26,6 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // 加入 CORS header，允許前端跨域呼叫
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
