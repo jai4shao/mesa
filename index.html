@@ -240,7 +240,7 @@
         row.push(remark, monthEnd6, userId);
 
         try {
-          const res = await fetch("/api/save", {
+          const res = await fetch("GAS網址", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ row }),
