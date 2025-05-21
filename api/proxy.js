@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     // 你的 GAS Web App URL
-    const GAS_URL = 'https://script.google.com/macros/s/你的部署ID/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxSly_6PEMVdv12ELjPEw3cL20JQV135_G3hyuMVYtBwcpdp1Ka-wiuT72mHgP7hvo0/exec';
 
     const response = await fetch(GAS_URL, {
       method: 'POST',
