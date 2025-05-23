@@ -158,25 +158,34 @@ button:active {
   }
 
   // 取得當下年月
-  const now = new Date();
-const year = now.getFullYear();
-const month = now.getMonth() + 1; // 1~12
-const lastMonth = month === 1 ? 12 : month - 1;
-const lastMonthYear = month === 1 ? year - 1 : year;
+const now = new Date();
+const thisYear = now.getFullYear();
+const thisMonth = now.getMonth() + 1; // 本月份 1~12
 
-// 設定標題
-document.getElementById('title').textContent = `${year}年${month}月約班表`;
-document.getElementById('pageTitle').textContent = `${year}年${month}月約班表`;
-document.getElementById('lastMonth6Label').textContent = `${lastMonthYear}年${lastMonth}月底六天班`;
+// 計算下個月年月
+let nextMonth = thisMonth === 12 ? 1 : thisMonth + 1;
+let nextMonthYear = thisMonth === 12 ? thisYear + 1 : thisYear;
 
-// 取得當月天數
+// 本月年月（用於月底6天班標題）
+const thisMonthYear = thisYear;
+const thisMonthNum = thisMonth;
+
+// 設定標題為下個月
+document.getElementById('title').textContent = `${nextMonthYear}年${nextMonth}月約班表`;
+document.getElementById('pageTitle').textContent = `${nextMonthYear}年${nextMonth}月約班表`;
+
+// 底下顯示本月月底6天班
+document.getElementById('lastMonth6Label').textContent = `${thisMonthYear}年${thisMonthNum}月底六天班`;
+
+// 取得下個月天數
 function getDaysInMonth(y, m) {
   return new Date(y, m, 0).getDate();
 }
-daysInMonth = getDaysInMonth(year, month);
+daysInMonth = getDaysInMonth(nextMonthYear, nextMonth);
 
-// 取得本月1號是星期幾（0:日~6:六）
-const firstDay = new Date(year, month - 1, 1).getDay();
+// 取得下個月1號是星期幾（0:日~6:六）
+const firstDay = new Date(nextMonthYear, nextMonth - 1, 1).getDay();
+
 
 
   // 取得下拉選單選項（從 GAS 取得）
