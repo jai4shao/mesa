@@ -131,14 +131,27 @@ button:active {
     <button type="submit" id="submitBtn">送出班表</button>
   </form>
 <script>
-  // 請填入您的 LIFF ID
+  // 1. 直接在這裡維護所有下拉選項
+  const selectOptions = ["R", "D", "E", "N", "公假", "水里", "行政"];
+  // 2. 只做一次 HTML 拼接，包含一個空選項
+  const optionHtml =
+    '<option value=""></option>' +
+    selectOptions.map(v => `<option value="${v}">${v}</option>`).join('');
+
+  // 請填入您的 LIFF ID & GAS 網頁應用程式網址
   const liffId = "2007431269-rQ7vYpWB";
-  // 請填入您的 GAS 網頁應用程式網址
   const GAS_URL = "https://script.google.com/macros/s/AKfycbwQyYerhlowezy4XoE3zqoeRNd1Wx80rwOwn6TN9h05gWHK2LhN0KjL8j_lYH64Mg05/exec";
 
   let lineId = "";
-  let daysInMonth; // 動態設定當月天數
-  let selectOptions = [];
+
+  // 取得本地今天、以及下個月年月、天數和第一天星期
+  const now = new Date();
+  const thisYear  = now.getFullYear();
+  const thisMonth = now.getMonth() + 1;          // 1~12
+  const nextMonth      = thisMonth === 12 ? 1 : thisMonth + 1;
+  const nextMonthYear  = thisMonth === 12 ? thisYear + 1 : thisYear;
+  const daysInMonth    = new Date(nextMonthYear, nextMonth, 0).getDate();
+  const firstDay       = new Date(nextMonthYear, nextMonth - 1, 1).getDay(); // 0=日…6=六
 
   // LIFF 初始化
   async function initLiff() {
@@ -151,147 +164,89 @@ button:active {
       }
       const profile = await liff.getProfile();
       lineId = profile.userId;
-      document.getElementById('lineIdShow').textContent = "您的 Line ID：" + lineId + "，名稱：" + profile.displayName;
+      document.getElementById('lineIdShow').textContent =
+        `您的 Line ID：${lineId}，名稱：${profile.displayName}`;
     } catch (e) {
       document.getElementById('lineIdShow').textContent = "LIFF 初始化失敗：" + e;
     }
   }
 
-  // 取得當下年月
-const now = new Date();
-const thisYear = now.getFullYear();
-const thisMonth = now.getMonth() + 1; // 本月份 1~12
-
-// 計算下個月年月
-let nextMonth = thisMonth === 12 ? 1 : thisMonth + 1;
-let nextMonthYear = thisMonth === 12 ? thisYear + 1 : thisYear;
-
-// 本月年月（用於月底6天班標題）
-const thisMonthYear = thisYear;
-const thisMonthNum = thisMonth;
-
-// 設定標題為下個月
-document.getElementById('title').textContent = `${nextMonthYear}年${nextMonth}月約班表`;
-document.getElementById('pageTitle').textContent = `${nextMonthYear}年${nextMonth}月約班表`;
-
-// 底下顯示本月月底6天班
-document.getElementById('lastMonth6Label').textContent = `${thisMonthYear}年${thisMonthNum}月底六天班`;
-
-// 取得下個月天數
-function getDaysInMonth(y, m) {
-  return new Date(y, m, 0).getDate();
-}
-daysInMonth = getDaysInMonth(nextMonthYear, nextMonth);
-
-// 取得下個月1號是星期幾（0:日~6:六）
-const firstDay = new Date(nextMonthYear, nextMonth - 1, 1).getDay();
-
-
-
-  // 取得下拉選單選項（從 GAS 取得）
-  async function loadSettings() {
-    try {
-      const res = await fetch(GAS_URL + "?action=getSettings");
-      const options = await res.json();
-      if (!options || options.length === 0) {
-        alert("下拉選單設定為空，請檢查 setting 分頁！");
-      }
-      selectOptions = options;
-      buildCalendar();
-    } catch (e) {
-      alert("取得下拉選單失敗：" + e);
-    }
-  }
-
-  // 建立行事曆表格
+  // 建立行事曆
   function buildCalendar() {
+    // 更新標題
+    document.getElementById('title').textContent      = `${nextMonthYear}年${nextMonth}月約班表`;
+    document.getElementById('pageTitle').textContent  = `${nextMonthYear}年${nextMonth}月約班表`;
+    document.getElementById('lastMonth6Label').textContent =
+      `${thisYear}年${thisMonth}月底六天班`;
+
     const table = document.getElementById('calendarTable');
     table.innerHTML = '';
-    // 星期標題
-    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+    // 星期列
+    const weekDays = ['日','一','二','三','四','五','六'];
     const trHead = document.createElement('tr');
-    weekDays.forEach((d, i) => {
+    weekDays.forEach((d,i) => {
       const th = document.createElement('th');
       th.textContent = d;
-      if (i === 0) th.className = 'sunday';
-      if (i === 6) th.className = 'saturday';
+      if (i === 0) th.classList.add('sunday');
+      if (i === 6) th.classList.add('saturday');
       trHead.appendChild(th);
     });
     table.appendChild(trHead);
 
-    // 日期與下拉選單
-    let tr = document.createElement('tr');
+    // 日期與下拉選單格子
     let day = 1;
-    // 填入空白
+    let tr = document.createElement('tr');
+    // 前置空白
     for (let i = 0; i < firstDay; i++) {
       tr.appendChild(document.createElement('td'));
     }
+    // 第一週
     for (let i = firstDay; i < 7; i++) {
-      tr.appendChild(createDayCell(day, i));
-      day++;
+      tr.appendChild(createDayCell(day++, i));
     }
     table.appendChild(tr);
-
+    // 其餘週
     while (day <= daysInMonth) {
       tr = document.createElement('tr');
       for (let i = 0; i < 7; i++) {
         if (day > daysInMonth) {
           tr.appendChild(document.createElement('td'));
         } else {
-          tr.appendChild(createDayCell(day, i));
-          day++;
+          tr.appendChild(createDayCell(day++, i));
         }
       }
       table.appendChild(tr);
     }
   }
 
-  // 建立單一天的 cell
+  // 建立單日格子（直接套用 optionHtml）
   function createDayCell(day, weekIdx) {
     const td = document.createElement('td');
-    if (weekIdx === 0) td.className = 'sunday';
-    if (weekIdx === 6) td.className = 'saturday';
+    if (weekIdx === 0) td.classList.add('sunday');
+    if (weekIdx === 6) td.classList.add('saturday');
+
     td.innerHTML = `<div>${day}</div>`;
-    // 下拉選單
     const select = document.createElement('select');
     select.name = `day${day}`;
-    const emptyOpt = document.createElement('option');
-    emptyOpt.value = '';
-    emptyOpt.textContent = '';
-    select.appendChild(emptyOpt);
-    selectOptions.forEach(opt => {
-      const option = document.createElement('option');
-      option.value = opt;
-      option.textContent = opt;
-      select.appendChild(option);
-    });
+    select.innerHTML = optionHtml;
     td.appendChild(select);
     return td;
   }
 
-  // 格式化日期 yyyy-mm-dd 字串
-  function formatDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
   // 取得時間限制設定
   async function getTimeLimit() {
-    const res = await fetch(GAS_URL + "?action=getTimeLimit");
+    const res = await fetch(`${GAS_URL}?action=getTimeLimit`);
     if (!res.ok) throw new Error("無法取得時間限制");
     return res.json();
   }
-
-  // 解析日期與時間字串成 Date 物件
+  // 解析日期+時間成 Date
   function parseDateTime(dateStr, timeStr) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const [hour, minute] = timeStr.split(':').map(Number);
-    return new Date(year, month - 1, day, hour, minute);
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const [hh,mm] = timeStr.split(':').map(Number);
+    return new Date(y, m-1, d, hh, mm);
   }
-
-  // 判斷是否在允許時間內（起始日期時間 ~ 結束日期時間）
+  // 檢查現在是否在允許時間內
   async function isWithinAllowedTime() {
     try {
       const limit = await getTimeLimit();
@@ -299,10 +254,9 @@ const firstDay = new Date(nextMonthYear, nextMonth - 1, 1).getDay();
         return false;
       }
       const now = new Date();
-      const startDateTime = parseDateTime(limit.startDate, limit.startTime);
-      const endDateTime = parseDateTime(limit.endDate, limit.endTime);
-
-      return now >= startDateTime && now <= endDateTime;
+      const start = parseDateTime(limit.startDate, limit.startTime);
+      const end   = parseDateTime(limit.endDate,   limit.endTime);
+      return now >= start && now <= end;
     } catch (e) {
       console.error("時間判斷錯誤", e);
       return false;
@@ -323,60 +277,59 @@ const firstDay = new Date(nextMonthYear, nextMonth - 1, 1).getDay();
   }
 
   // 表單送出事件
-document.getElementById('shiftForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const submitBtn = document.getElementById('submitBtn');
-  submitBtn.disabled = true;            // 禁用按鈕
-  submitBtn.textContent = '請稍候...';  // 顯示提示文字
+  document.getElementById('shiftForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '請稍候...';
 
-  try {
-    // 1. 時間判斷
-    const allowed = await isWithinAllowedTime();
-    if (!allowed) {
-      alert('現在無法進行預約');
-      return;
+    try {
+      // 1. 時間判斷（這裡才 fetch）
+      const allowed = await isWithinAllowedTime();
+      if (!allowed) {
+        alert('現在無法進行預約');
+        return;
+      }
+
+      // 2. 準備資料
+      const data = {
+        days: {},
+        remark:      document.getElementById('remark').value,
+        lastMonth6:  document.getElementById('lastMonth6').value,
+        lineId
+      };
+      for (let i = 1; i <= daysInMonth; i++) {
+        data.days[i] = document.querySelector(`select[name="day${i}"]`).value;
+      }
+
+      // 3. 傳送資料
+      const params = new URLSearchParams();
+      params.append('action', 'submitData');
+      params.append('data', encodeURIComponent(JSON.stringify(data)));
+
+      const res = await fetch(`${GAS_URL}?` + params.toString());
+      const result = await res.json();
+
+      if (result && result.success) {
+        alert('送出成功！');
+        this.reset();
+        liff.closeWindow();
+      } else {
+        alert('送出失敗！');
+      }
+    } catch (error) {
+      alert('送出失敗：' + error);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '送出班表';
     }
+  });
 
-    // 2. 準備資料
-    const data = {
-      days: {},
-      remark: document.getElementById('remark').value,
-      lastMonth6: document.getElementById('lastMonth6').value,
-      lineId: lineId
-    };
-    for (let i = 1; i <= daysInMonth; i++) {
-      const val = document.querySelector(`select[name="day${i}"]`).value;
-      data.days[i] = val;
-    }
-
-    // 3. 傳送資料
-    const params = new URLSearchParams();
-    params.append('action', 'submitData');
-    params.append('data', encodeURIComponent(JSON.stringify(data)));
-
-    const res = await fetch(GAS_URL + '?' + params.toString());
-    const result = await res.json();
-
-    if (result && result.success) {
-      alert('送出成功！');
-      this.reset();
-      liff.closeWindow();
-    } else {
-      alert('送出失敗！');
-    }
-  } catch (error) {
-    alert('送出失敗：' + error);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = '送出班表';
-  }
-});
-
-    // 初始化
-    window.onload = async function() {
-      await initLiff();
-      await loadSettings();
-    };
+  // 頁面載入時：先 init LIFF，再建表
+  window.onload = async function() {
+    await initLiff();
+    buildCalendar();
+  };
 </script>
 </body>
 </html>
