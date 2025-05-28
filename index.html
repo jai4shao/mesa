@@ -328,10 +328,9 @@ button:active {
   // 頁面載入時：先 init LIFF，再建表
   window.onload = async function() {
   await initLiff();
-  await loadSettings();
+  await loadSettings();  // 先載入設定與建表
 
-  // 判斷是否在允許預約時間
-  const allowed = await isWithinAllowedTime();
+  const allowed = await isWithinAllowedTime(); // 再判斷是否允許送出
   const submitBtn = document.getElementById('submitBtn');
   if (!allowed) {
     submitBtn.disabled = true;
@@ -341,6 +340,7 @@ button:active {
     submitBtn.textContent = '送出班表';
   }
 };
+
 </script>
 </body>
 </html>
