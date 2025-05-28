@@ -327,9 +327,20 @@ button:active {
 
   // 頁面載入時：先 init LIFF，再建表
   window.onload = async function() {
-    await initLiff();
-    buildCalendar();
-  };
+  await initLiff();
+  await loadSettings();
+
+  // 判斷是否在允許預約時間
+  const allowed = await isWithinAllowedTime();
+  const submitBtn = document.getElementById('submitBtn');
+  if (!allowed) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '目前無法預約';
+  } else {
+    submitBtn.disabled = false;
+    submitBtn.textContent = '送出班表';
+  }
+};
 </script>
 </body>
 </html>
