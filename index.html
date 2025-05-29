@@ -311,7 +311,7 @@ button:active {
       const result = await res.json();
 
       if (result && result.success) {
-        alert('送出成功！');
+        alert('送出成功！若要『修改』請重新送出一次預約！');
         this.reset();
         liff.closeWindow();
       } else {
