@@ -329,7 +329,7 @@ button:active {
   window.onload = async function() {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    submitBtn.textContent = '讀取中…';
+    submitBtn.textContent = '查詢可否進行預約中';
     
   await initLiff();
   buildCalendar();  // 直接呼叫建表函式
