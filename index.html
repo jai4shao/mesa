@@ -327,6 +327,10 @@ button:active {
 
   // 頁面載入時：先 init LIFF，再建表
   window.onload = async function() {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '讀取中…';
+    
   await initLiff();
   buildCalendar();  // 直接呼叫建表函式
 
