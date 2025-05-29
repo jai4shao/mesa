@@ -335,7 +335,7 @@ button:active {
   buildCalendar();  // 直接呼叫建表函式
 
   const allowed = await isWithinAllowedTime(); // 再判斷是否允許送出
-  const submitBtn = document.getElementById('submitBtn');
+  
   if (!allowed) {
     submitBtn.disabled = true;
     submitBtn.textContent = '目前無法預約';
