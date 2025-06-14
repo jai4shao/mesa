@@ -294,7 +294,7 @@ button:active {
       if (userData.lineId) {
         // 填充行事曆和文字框
         document.getElementById('remark').value = userData.remark;
-        document.getElementById('lastMonth6').value = userData.days[0]; // 假設 lastMonth6 在第一天的欄位
+        document.getElementById('lastMonth6').value = userData.lastMonth6; // 假設 lastMonth6 在第一天的欄位
         for (let i = 1; i <= daysInMonth; i++) {
           const dayCell = document.querySelector(`select[name="day${i}"]`);
           if (userData.days[i - 1]) {
