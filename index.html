@@ -110,24 +110,56 @@ button:active {
     font-size: var(--font2-size);
   }
 }
-    /* 在最下面加入淡紅色的按鈕樣式 */
-    .fetchUserDataBtn {
-      background-color: #FFCCCB; /* 淡紅色 */
-      color: #D80000; /* 深紅色文字 */
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s; /* 添加過渡效果 */
-    }
+  /* 載入提示樣式 */
+  #loadingMessage {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px 40px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999; /* 保證它顯示在最前面 */
+    display: none; /* 預設隱藏 */
+    animation: fadeIn 1s ease-out; /* 加入淡入動畫 */
+  }
 
-    .fetchUserDataBtn:hover {
-      background-color: #FFB3B3; /* 滑鼠懸停時顏色變深 */
+  /* 載入動畫：淡入效果 */
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
     }
+    100% {
+      opacity: 1;
+    }
+  }
 
-    .fetchUserDataBtn:focus {
-      outline: none; /* 去掉聚焦時的外圍框 */
+  /* 載入指示器的動畫：讓文字移動 */
+  #loadingMessage::after {
+    content: '...';
+    display: inline-block;
+    animation: loadingDots 1s infinite;
+  }
+
+  /* 加入小圓點動畫，讓它有點動感 */
+  @keyframes loadingDots {
+    0% {
+      content: '...';
     }
+    33% {
+      content: '..';
+    }
+    66% {
+      content: '.';
+    }
+    100% {
+      content: '...';
+    }
+  }
   </style>
 </head>
 <body>
@@ -148,7 +180,7 @@ button:active {
     </div>
     <button type="submit" id="submitBtn">送出班表</button>
     <p id="reminderText" style="color: red; margin-top: 10px;">送出後請稍等一下（最多五分鐘），才會同步到大班表。</p>
-    <button id="fetchUserDataBtn" class="fetchUserDataBtn">取得上一次約班資料進行修改</button>
+    
   </form>
 <script>
   // 1. 直接在這裡維護所有下拉選項
@@ -308,10 +340,10 @@ button:active {
         document.getElementById('remark').value = userData.remark || '';
         document.getElementById('lastMonth6').value = userData.lastMonth6 || ''; 
         return userData;  // 返回資料以便填充行事曆
-      } else {
-        alert('找不到相關資料');
+      } 
+        // 如果沒有資料，直接返回 null，並不顯示提示
         return null;
-      }
+      
     } catch (error) {
       console.error('獲取資料失敗:', error);
       alert('獲取資料失敗，請稍後再試');
