@@ -130,11 +130,11 @@ button:active {
     </div>
     <button type="submit" id="submitBtn">送出班表</button>
     <p id="reminderText" style="color: red; margin-top: 10px;">送出後請稍等一下（最多五分鐘），才會同步到大班表。</p>
+    <button id="fetchUserDataBtn">修改約班資料</button>
   </form>
 <script>
   // 1. 直接在這裡維護所有下拉選項
   const selectOptions = ["R", "D", "E", "N", "公假", "水里", "行政"];
-  // 2. 只做一次 HTML 拼接，包含一個空選項
   const optionHtml =
     '<option value=""></option>' +
     selectOptions.map(v => `<option value="${v}">${v}</option>`).join('');
@@ -241,12 +241,14 @@ button:active {
     if (!res.ok) throw new Error("無法取得時間限制");
     return res.json();
   }
+  
   // 解析日期+時間成 Date
   function parseDateTime(dateStr, timeStr) {
     const [y,m,d] = dateStr.split('-').map(Number);
     const [hh,mm] = timeStr.split(':').map(Number);
     return new Date(y, m-1, d, hh, mm);
   }
+
   // 檢查現在是否在允許時間內
   async function isWithinAllowedTime() {
     try {
@@ -274,6 +276,37 @@ button:active {
     } catch (e) {
       console.error('檢查 lineId 發生錯誤:', e);
       return false;
+    }
+  }
+
+  // 取得使用者資料並填充表單
+  async function fetchUserData() {
+    if (!lineId) {
+      alert('請先登入 Line ID');
+      return;
+    }
+
+    try {
+      // 呼叫 GAS 端點以取得使用者資料
+      const res = await fetch(`${GAS_URL}?action=getUserData&lineId=${encodeURIComponent(lineId)}`);
+      const userData = await res.json();
+
+      if (userData.lineId) {
+        // 填充行事曆和文字框
+        document.getElementById('remark').value = userData.remark;
+        document.getElementById('lastMonth6').value = userData.days[0]; // 假設 lastMonth6 在第一天的欄位
+        for (let i = 1; i <= daysInMonth; i++) {
+          const dayCell = document.querySelector(`select[name="day${i}"]`);
+          if (userData.days[i - 1]) {
+            dayCell.value = userData.days[i - 1]; // 填入該日的資料
+          }
+        }
+      } else {
+        alert('找不到相關資料');
+      }
+    } catch (error) {
+      console.error('獲取資料失敗:', error);
+      alert('獲取資料失敗，請稍後再試');
     }
   }
 
@@ -332,20 +365,23 @@ button:active {
     submitBtn.disabled = true;
     submitBtn.textContent = '查詢可否進行預約中';
     
-  await initLiff();
-  buildCalendar();  // 直接呼叫建表函式
+    await initLiff();
+    buildCalendar();  // 直接呼叫建表函式
 
-  const allowed = await isWithinAllowedTime(); // 再判斷是否允許送出
-  
-  if (!allowed) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = '目前無法預約';
-  } else {
-    submitBtn.disabled = false;
-    submitBtn.textContent = '送出班表';
-  }
-};
+    const allowed = await isWithinAllowedTime(); // 再判斷是否允許送出
+    
+    if (!allowed) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '目前無法預約';
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '送出班表';
+    }
+  };
 
+  // 新增按鈕用於取得使用者資料
+  document.getElementById('fetchUserDataBtn').addEventListener('click', fetchUserData);
 </script>
+
 </body>
 </html>
