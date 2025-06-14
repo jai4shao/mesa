@@ -131,6 +131,7 @@ button:active {
   </style>
 </head>
 <body>
+  <div id="loadingMessage" style="display: none;">資料載入中，請稍候...</div>
   <h2 id="title"></h2>
   <div id="lineIdShow" style="display:none;"></div>
   <form id="shiftForm" autocomplete="off">
@@ -164,12 +165,12 @@ button:active {
 
   // 取得本地今天、以及下個月年月、天數和第一天星期
   const now = new Date();
-  const thisYear  = now.getFullYear();
-  const thisMonth = now.getMonth() + 1;          // 1~12
-  const nextMonth      = thisMonth === 12 ? 1 : thisMonth + 1;
-  const nextMonthYear  = thisMonth === 12 ? thisYear + 1 : thisYear;
-  const daysInMonth    = new Date(nextMonthYear, nextMonth, 0).getDate();
-  const firstDay       = new Date(nextMonthYear, nextMonth - 1, 1).getDay(); // 0=日…6=六
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth() + 1; // 1~12
+  const nextMonth = thisMonth === 12 ? 1 : thisMonth + 1;
+  const nextMonthYear = thisMonth === 12 ? thisYear + 1 : thisYear;
+  const daysInMonth = new Date(nextMonthYear, nextMonth, 0).getDate();
+  const firstDay = new Date(nextMonthYear, nextMonth - 1, 1).getDay(); // 0=日…6=六
 
   // LIFF 初始化
   async function initLiff() {
@@ -189,81 +190,18 @@ button:active {
     }
   }
 
-  // 建立行事曆
-  function buildCalendar() {
-    // 更新標題
-    document.getElementById('title').textContent      = `${nextMonthYear}年${nextMonth}月約班表`;
-    document.getElementById('pageTitle').textContent  = `${nextMonthYear}年${nextMonth}月約班表`;
-    document.getElementById('lastMonth6Label').textContent =
-      `${thisYear}年${thisMonth}月底六天班`;
-
-    const table = document.getElementById('calendarTable');
-    table.innerHTML = '';
-
-    // 星期列
-    const weekDays = ['日','一','二','三','四','五','六'];
-    const trHead = document.createElement('tr');
-    weekDays.forEach((d,i) => {
-      const th = document.createElement('th');
-      th.textContent = d;
-      if (i === 0) th.classList.add('sunday');
-      if (i === 6) th.classList.add('saturday');
-      trHead.appendChild(th);
-    });
-    table.appendChild(trHead);
-
-    // 日期與下拉選單格子
-    let day = 1;
-    let tr = document.createElement('tr');
-    // 前置空白
-    for (let i = 0; i < firstDay; i++) {
-      tr.appendChild(document.createElement('td'));
-    }
-    // 第一週
-    for (let i = firstDay; i < 7; i++) {
-      tr.appendChild(createDayCell(day++, i));
-    }
-    table.appendChild(tr);
-    // 其餘週
-    while (day <= daysInMonth) {
-      tr = document.createElement('tr');
-      for (let i = 0; i < 7; i++) {
-        if (day > daysInMonth) {
-          tr.appendChild(document.createElement('td'));
-        } else {
-          tr.appendChild(createDayCell(day++, i));
-        }
-      }
-      table.appendChild(tr);
-    }
-  }
-
-  // 建立單日格子（直接套用 optionHtml）
-  function createDayCell(day, weekIdx) {
-    const td = document.createElement('td');
-    if (weekIdx === 0) td.classList.add('sunday');
-    if (weekIdx === 6) td.classList.add('saturday');
-
-    td.innerHTML = `<div>${day}</div>`;
-    const select = document.createElement('select');
-    select.name = `day${day}`;
-    select.innerHTML = optionHtml;
-    td.appendChild(select);
-    return td;
-  }
-
   // 取得時間限制設定
   async function getTimeLimit() {
     const res = await fetch(`${GAS_URL}?action=getTimeLimit`);
     if (!res.ok) throw new Error("無法取得時間限制");
     return res.json();
   }
-  
+
   // 解析日期+時間成 Date
   function parseDateTime(dateStr, timeStr) {
-    const [y,m,d] = dateStr.split('-').map(Number);
-    const [hh,mm] = timeStr.split(':').map(Number);
-    return new Date(y, m-1, d, hh, mm);
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const [hh, mm] = timeStr.split(':').map(Number);
+    return new Date(y, m - 1, d, hh, mm);
   }
 
   // 檢查現在是否在允許時間內
@@ -275,7 +213,7 @@ button:active {
       }
       const now = new Date();
       const start = parseDateTime(limit.startDate, limit.startTime);
-      const end   = parseDateTime(limit.endDate,   limit.endTime);
+      const end = parseDateTime(limit.endDate, limit.endTime);
       return now >= start && now <= end;
     } catch (e) {
       console.error("時間判斷錯誤", e);
@@ -283,24 +221,81 @@ button:active {
     }
   }
 
-  // 檢查使用者是否在 users 名單中
-  async function checkLineIdExists(lineId) {
-    try {
-      const url = `${GAS_URL}?action=checkLineId&lineId=${encodeURIComponent(lineId)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.exists;
-    } catch (e) {
-      console.error('檢查 lineId 發生錯誤:', e);
-      return false;
+  // 建立行事曆（如果有資料就帶入資料）
+  function buildCalendar(userData = null) {
+    // 更新標題
+    document.getElementById('title').textContent = `${nextMonthYear}年${nextMonth}月約班表`;
+    document.getElementById('pageTitle').textContent = `${nextMonthYear}年${nextMonth}月約班表`;
+    document.getElementById('lastMonth6Label').textContent = `${thisYear}年${thisMonth}月底六天班`;
+
+    const table = document.getElementById('calendarTable');
+    table.innerHTML = '';  // 清空原有的行事曆內容
+
+    // 星期列
+    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+    const trHead = document.createElement('tr');
+    weekDays.forEach((d, i) => {
+      const th = document.createElement('th');
+      th.textContent = d;
+      if (i === 0) th.classList.add('sunday');
+      if (i === 6) th.classList.add('saturday');
+      trHead.appendChild(th);
+    });
+    table.appendChild(trHead);
+
+    // 日期與下拉選單格子
+    let day = 1;
+    let tr = document.createElement('tr');
+
+    // 前置空白
+    for (let i = 0; i < firstDay; i++) {
+      tr.appendChild(document.createElement('td'));
     }
+
+    // 第一週
+    for (let i = firstDay; i < 7; i++) {
+      tr.appendChild(createDayCell(day++, i, userData));
+    }
+    table.appendChild(tr);
+
+    // 其餘週
+    while (day <= daysInMonth) {
+      tr = document.createElement('tr');
+      for (let i = 0; i < 7; i++) {
+        if (day > daysInMonth) {
+          tr.appendChild(document.createElement('td'));
+        } else {
+          tr.appendChild(createDayCell(day++, i, userData));
+        }
+      }
+      table.appendChild(tr);
+    }
+  }
+
+  // 建立單日格子（如果有資料，填充選項）
+  function createDayCell(day, weekIdx, userData) {
+    const td = document.createElement('td');
+    if (weekIdx === 0) td.classList.add('sunday');
+    if (weekIdx === 6) td.classList.add('saturday');
+
+    td.innerHTML = `<div>${day}</div>`;
+    const select = document.createElement('select');
+    select.name = `day${day}`;
+    select.innerHTML = optionHtml;
+
+    if (userData && userData.days && userData.days[day - 1]) {
+      select.value = userData.days[day - 1];  // 如果有資料，填入資料
+    }
+
+    td.appendChild(select);
+    return td;
   }
 
   // 取得使用者資料並填充表單
   async function fetchUserData() {
     if (!lineId) {
       alert('請先登入 Line ID');
-      return;
+      return null;
     }
 
     try {
@@ -309,21 +304,18 @@ button:active {
       const userData = await res.json();
 
       if (userData.lineId) {
-        // 填充行事曆和文字框
-        document.getElementById('remark').value = userData.remark;
-        document.getElementById('lastMonth6').value = userData.lastMonth6; // 假設 lastMonth6 在第一天的欄位
-        for (let i = 1; i <= daysInMonth; i++) {
-          const dayCell = document.querySelector(`select[name="day${i}"]`);
-          if (userData.days[i - 1]) {
-            dayCell.value = userData.days[i - 1]; // 填入該日的資料
-          }
-        }
+        // 填充備註欄位和上個月底六天班
+        document.getElementById('remark').value = userData.remark || '';
+        document.getElementById('lastMonth6').value = userData.lastMonth6 || ''; 
+        return userData;  // 返回資料以便填充行事曆
       } else {
         alert('找不到相關資料');
+        return null;
       }
     } catch (error) {
       console.error('獲取資料失敗:', error);
       alert('獲取資料失敗，請稍後再試');
+      return null;
     }
   }
 
@@ -345,8 +337,8 @@ button:active {
       // 2. 準備資料
       const data = {
         days: {},
-        remark:      document.getElementById('remark').value,
-        lastMonth6:  document.getElementById('lastMonth6').value,
+        remark: document.getElementById('remark').value,
+        lastMonth6: document.getElementById('lastMonth6').value,
         lineId
       };
       for (let i = 1; i <= daysInMonth; i++) {
@@ -376,17 +368,31 @@ button:active {
     }
   });
 
-  // 頁面載入時：先 init LIFF，再建表
+  // 頁面載入時：先 init LIFF，再讀取資料並建立行事曆
   window.onload = async function() {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.textContent = '查詢可否進行預約中';
     
-    await initLiff();
-    buildCalendar();  // 直接呼叫建表函式
+    // 顯示載入提示
+    const loadingMessage = document.getElementById('loadingMessage'); 
+    loadingMessage.style.display = 'block';  // 顯示「資料載入中...」
 
-    const allowed = await isWithinAllowedTime(); // 再判斷是否允許送出
+    await initLiff();
     
+    // 讀取使用者資料並根據資料來建構頁面
+    const userData = await fetchUserData();
+
+    if (userData) {
+      // 如果有資料，填充行事曆和備註欄位
+      buildCalendar(userData);
+    } else {
+      // 如果沒有資料，建立空白行事曆
+      buildCalendar(); 
+    }
+
+    // 檢查是否在允許的時間範圍內
+    const allowed = await isWithinAllowedTime();
     if (!allowed) {
       submitBtn.disabled = true;
       submitBtn.textContent = '目前無法預約';
@@ -394,14 +400,10 @@ button:active {
       submitBtn.disabled = false;
       submitBtn.textContent = '送出班表';
     }
+
+    // 隱藏載入提示
+    loadingMessage.style.display = 'none';  
   };
-
-// 只讓這個按鈕觸發讀取資料的功能
-  document.getElementById('fetchUserDataBtn').addEventListener('click', async function(event) {
-  event.preventDefault();  // 阻止表單提交，確保只執行讀取資料功能
-  await fetchUserData();   // 呼叫 fetchUserData 函數來讀取資料
-});
-
 
 </script>
 
