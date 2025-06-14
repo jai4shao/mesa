@@ -129,6 +129,20 @@ button:active {
     .fetchUserDataBtn:focus {
       outline: none; /* 去掉聚焦時的外圍框 */
     }
+  #loadingMessage {
+  font-size: 16px;
+  color: #000;
+  background-color: #f0f0f0;
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
   </style>
 </head>
 <body>
@@ -309,6 +323,8 @@ button:active {
       // 呼叫 GAS 端點以取得使用者資料
       const res = await fetch(`${GAS_URL}?action=getUserData&lineId=${encodeURIComponent(lineId)}`);
       const userData = await res.json();
+
+      console.log('取得的使用者資料:', userData);  // 日誌顯示取得的資料
 
       if (userData.lineId) {
         // 填充行事曆和文字框
