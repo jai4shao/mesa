@@ -379,8 +379,11 @@ button:active {
     }
   };
 
-  // 新增按鈕用於取得使用者資料
-  document.getElementById('fetchUserDataBtn').addEventListener('click', fetchUserData);
+// 只讓這個按鈕觸發讀取資料的功能
+  document.getElementById('fetchUserDataBtn').addEventListener('click', async function() {
+  await fetchUserData();  // 呼叫 fetchUserData 函數來讀取資料
+});
+
 </script>
 
 </body>
