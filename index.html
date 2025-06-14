@@ -133,6 +133,7 @@ button:active {
 </head>
 <body>
   <h2 id="title"></h2>
+  <div id="loadingMessage" style="display: none;">資料載入中，請稍候...</div>
   <div id="lineIdShow" style="display:none;"></div>
   <form id="shiftForm" autocomplete="off">
     <div class="calendar-container">
@@ -380,12 +381,13 @@ button:active {
   // 頁面載入時：先 init LIFF，再建表
   window.onload = async function() {
     const submitBtn = document.getElementById('submitBtn');
+    const loadingMessage = document.getElementById('loadingMessage'); // 顯示載入提示的元素
     submitBtn.disabled = true;
     submitBtn.textContent = '查詢可否進行預約中';
+
+    loadingMessage.style.display = 'block';  // 顯示「資料載入中...」
     
     await initLiff();
-    buildCalendar();  // 直接呼叫建表函式
-
     const allowed = await isWithinAllowedTime(); // 再判斷是否允許送出
     
     if (!allowed) {
@@ -396,7 +398,9 @@ button:active {
       submitBtn.textContent = '送出班表';
     }
       // 嘗試從伺服器獲取使用者資料並填充行事曆
-  await fetchUserData(); // 這會在頁面載入時查詢並填入最近一筆資料
+    await fetchUserData(); // 這會在頁面載入時查詢並填入最近一筆資料
+    buildCalendar();  // 直接呼叫建表函式
+    loadingMessage.style.display = 'none';  // 隱藏載入中提示
   };
 
 // 只讓這個按鈕觸發讀取資料的功能
