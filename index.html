@@ -111,6 +111,26 @@ button:active {
     font-size: var(--font2-size);
   }
 }
+    /* 在最下面加入淡紅色的按鈕樣式 */
+    .fetchUserDataBtn {
+      background-color: #FFCCCB; /* 淡紅色 */
+      color: #D80000; /* 深紅色文字 */
+      border: 1px solid #D80000; /* 深紅色邊框 */
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, border 0.3s; /* 添加過渡效果 */
+    }
+
+    .fetchUserDataBtn:hover {
+      background-color: #FFB3B3; /* 滑鼠懸停時顏色變深 */
+      border: 1px solid #D80000; /* 滑鼠懸停時邊框不變 */
+    }
+
+    .fetchUserDataBtn:focus {
+      outline: none; /* 去掉聚焦時的外圍框 */
+    }
   </style>
 </head>
 <body>
@@ -130,7 +150,7 @@ button:active {
     </div>
     <button type="submit" id="submitBtn">送出班表</button>
     <p id="reminderText" style="color: red; margin-top: 10px;">送出後請稍等一下（最多五分鐘），才會同步到大班表。</p>
-    <button id="fetchUserDataBtn">取得上一次約班資料進行修改</button>
+    <button id="fetchUserDataBtn" class="fetchUserDataBtn">取得上一次約班資料進行修改</button>
   </form>
 <script>
   // 1. 直接在這裡維護所有下拉選項
