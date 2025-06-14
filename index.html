@@ -380,9 +380,11 @@ button:active {
   };
 
 // 只讓這個按鈕觸發讀取資料的功能
-  document.getElementById('fetchUserDataBtn').addEventListener('click', async function() {
-  await fetchUserData();  // 呼叫 fetchUserData 函數來讀取資料
+  document.getElementById('fetchUserDataBtn').addEventListener('click', async function(event) {
+  event.preventDefault();  // 阻止表單提交，確保只執行讀取資料功能
+  await fetchUserData();   // 呼叫 fetchUserData 函數來讀取資料
 });
+
 
 </script>
 
