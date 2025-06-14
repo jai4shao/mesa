@@ -170,7 +170,7 @@ button:active {
   const selectOptions = ["R", "D", "E", "N", "公假", "水里", "行政"];
   const optionHtml =
     '<option value=""></option>' +
-    selectOptions.map(v => `<option value="${v}">${v}</option>`).join('');
+    selectOptions.map(v => <option value="${v}">${v}</option>).join('');
 
   // 請填入您的 LIFF ID & GAS 網頁應用程式網址
   const liffId = "2007431269-rQ7vYpWB";
@@ -199,7 +199,7 @@ button:active {
       const profile = await liff.getProfile();
       lineId = profile.userId;
       document.getElementById('lineIdShow').textContent =
-        `您的 Line ID：${lineId}，名稱：${profile.displayName}`;
+        您的 Line ID：${lineId}，名稱：${profile.displayName};
     } catch (e) {
       document.getElementById('lineIdShow').textContent = "LIFF 初始化失敗：" + e;
     }
@@ -208,10 +208,10 @@ button:active {
   // 建立行事曆
   function buildCalendar() {
     // 更新標題
-    document.getElementById('title').textContent      = `${nextMonthYear}年${nextMonth}月約班表`;
-    document.getElementById('pageTitle').textContent  = `${nextMonthYear}年${nextMonth}月約班表`;
+    document.getElementById('title').textContent      = ${nextMonthYear}年${nextMonth}月約班表;
+    document.getElementById('pageTitle').textContent  = ${nextMonthYear}年${nextMonth}月約班表;
     document.getElementById('lastMonth6Label').textContent =
-      `${thisYear}年${thisMonth}月底六天班`;
+      ${thisYear}年${thisMonth}月底六天班;
 
     const table = document.getElementById('calendarTable');
     table.innerHTML = '';
@@ -260,9 +260,9 @@ button:active {
     if (weekIdx === 0) td.classList.add('sunday');
     if (weekIdx === 6) td.classList.add('saturday');
 
-    td.innerHTML = `<div>${day}</div>`;
+    td.innerHTML = <div>${day}</div>;
     const select = document.createElement('select');
-    select.name = `day${day}`;
+    select.name = day${day};
     select.innerHTML = optionHtml;
     td.appendChild(select);
     return td;
@@ -270,7 +270,7 @@ button:active {
 
   // 取得時間限制設定
   async function getTimeLimit() {
-    const res = await fetch(`${GAS_URL}?action=getTimeLimit`);
+    const res = await fetch(${GAS_URL}?action=getTimeLimit);
     if (!res.ok) throw new Error("無法取得時間限制");
     return res.json();
   }
@@ -302,7 +302,7 @@ button:active {
   // 檢查使用者是否在 users 名單中
   async function checkLineIdExists(lineId) {
     try {
-      const url = `${GAS_URL}?action=checkLineId&lineId=${encodeURIComponent(lineId)}`;
+      const url = ${GAS_URL}?action=checkLineId&lineId=${encodeURIComponent(lineId)};
       const res = await fetch(url);
       const data = await res.json();
       return data.exists;
@@ -321,21 +321,19 @@ button:active {
 
     try {
       // 呼叫 GAS 端點以取得使用者資料
-      const res = await fetch(`${GAS_URL}?action=getUserData&lineId=${encodeURIComponent(lineId)}`);
+      const res = await fetch(${GAS_URL}?action=getUserData&lineId=${encodeURIComponent(lineId)});
       const userData = await res.json();
-
-      console.log('取得的使用者資料:', userData);  // 日誌顯示取得的資料
 
       if (userData.lineId) {
         // 填充行事曆和文字框
         document.getElementById('remark').value = userData.remark;
         document.getElementById('lastMonth6').value = userData.lastMonth6; // 假設 lastMonth6 在第一天的欄位
-      for (let i = 1; i <= daysInMonth; i++) {
-        const dayCell = document.querySelector(`select[name="day${i}"]`);
-        if (userData.days && userData.days[i - 1]) { // 檢查 userData.days 是否存在，並且對應的日資料不為空
-          dayCell.value = userData.days[i - 1]; // 填入該日的資料
+        for (let i = 1; i <= daysInMonth; i++) {
+          const dayCell = document.querySelector(select[name="day${i}"]);
+          if (userData.days[i - 1]) {
+            dayCell.value = userData.days[i - 1]; // 填入該日的資料
+          }
         }
-      }
       } else {
         alert('找不到相關資料');
       }
@@ -368,7 +366,7 @@ button:active {
         lineId
       };
       for (let i = 1; i <= daysInMonth; i++) {
-        data.days[i] = document.querySelector(`select[name="day${i}"]`).value;
+        data.days[i] = document.querySelector(select[name="day${i}"]).value;
       }
 
       // 3. 傳送資料
@@ -376,7 +374,7 @@ button:active {
       params.append('action', 'submitData');
       params.append('data', encodeURIComponent(JSON.stringify(data)));
 
-      const res = await fetch(`${GAS_URL}?` + params.toString());
+      const res = await fetch(${GAS_URL}? + params.toString());
       const result = await res.json();
 
       if (result && result.success) {
@@ -397,13 +395,12 @@ button:active {
   // 頁面載入時：先 init LIFF，再建表
   window.onload = async function() {
     const submitBtn = document.getElementById('submitBtn');
-    const loadingMessage = document.getElementById('loadingMessage'); // 顯示載入提示的元素
     submitBtn.disabled = true;
     submitBtn.textContent = '查詢可否進行預約中';
-
-    loadingMessage.style.display = 'block';  // 顯示「資料載入中...」
     
     await initLiff();
+    buildCalendar();  // 直接呼叫建表函式
+
     const allowed = await isWithinAllowedTime(); // 再判斷是否允許送出
     
     if (!allowed) {
@@ -413,10 +410,6 @@ button:active {
       submitBtn.disabled = false;
       submitBtn.textContent = '送出班表';
     }
-      // 嘗試從伺服器獲取使用者資料並填充行事曆
-    await fetchUserData(); // 這會在頁面載入時查詢並填入最近一筆資料
-    buildCalendar();  // 直接呼叫建表函式
-    loadingMessage.style.display = 'none';  // 隱藏載入中提示
   };
 
 // 只讓這個按鈕觸發讀取資料的功能
