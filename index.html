@@ -395,6 +395,8 @@ button:active {
       submitBtn.disabled = false;
       submitBtn.textContent = '送出班表';
     }
+      // 嘗試從伺服器獲取使用者資料並填充行事曆
+  await fetchUserData(); // 這會在頁面載入時查詢並填入最近一筆資料
   };
 
 // 只讓這個按鈕觸發讀取資料的功能
